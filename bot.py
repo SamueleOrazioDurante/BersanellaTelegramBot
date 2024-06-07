@@ -52,13 +52,17 @@ def markup_format(message,typo):
 def you(message):
     bot.send_message(message.chat.id, 'La donna piú bella!')
 
+@bot.message_handler(commands=['mov'])
+def you(message):
+    bot.send_message(message.chat.id, 'File troppo grandi :(((')
+    
 # inizio
 
 @bot.message_handler(func=lambda message: True)
 def default_reply(message):
-    if check_video_url:
+    if check_video_url(message):
         process_url(message)
-    else:
+    elif message.text != "/start":
         bot.send_message(message.chat.id, 'Link non valido.')   
 
 def check_video_url(message):
@@ -135,12 +139,54 @@ def download_video(message,format):
     else:
         bot.send_message(message.chat.id, "Nessun video trovato")
 
-def download_audio(message,format):
-    stream = yt.streams.filter(only_audio=True).first()
-
 def sendVideo(message,file,title):
     with open(file, 'rb') as video:
         bot.send_video(message.chat.id, video, caption=f"Download completato: {title}")
+    os.remove(file)
+
+def download_audio(message,format):
+
+    yt = YouTube(url)
+    video_title = yt.title
+    bot.send_message(message.chat.id, f"Download in corso: {video_title} | Formato: {format} ...")
+    
+    stream = yt.streams.filter(only_audio=True,mime_type="audio/webm").first()
+    
+    if stream:
+        
+        stream.download()
+        
+        if format == "webm":
+            sendAudio(message,stream.default_filename,stream.title)
+        elif format == "mp3":
+            mp3_path = stream.default_filename.replace(".webm", ".mp3")
+
+            webm_path_ffmpeg = "\""+stream.default_filename+"\""
+            mp3_path_ffmpeg = "\""+mp3_path+"\""
+
+            os.system(f"ffmpeg -i {webm_path_ffmpeg} {mp3_path_ffmpeg}")
+
+            os.remove(stream.default_filename)
+            sendAudio(message,mp3_path,stream.title)
+        elif format == "wav":
+            wav_path = stream.default_filename.replace(".webm", ".wav")
+
+            webm_path_ffmpeg = "\""+stream.default_filename+"\""
+            wav_path_ffmpeg = "\""+wav_path+"\""
+
+            os.system(f"ffmpeg -i {webm_path_ffmpeg} {wav_path_ffmpeg}")
+
+            os.remove(stream.default_filename)
+            sendAudio(message,wav_path,stream.title)
+        else:
+            bot.send_message(message.chat.id,"Formato non esistente")
+            print("Formato errato!");
+    else:
+        bot.send_message(message.chat.id, "Nessun video trovato")
+        
+def sendAudio(message,file,title):
+    with open(file, 'rb') as audio:
+        bot.send_audio(message.chat.id, audio, caption=f"Download completato: {title}")
     os.remove(file)
 
 bot.polling()

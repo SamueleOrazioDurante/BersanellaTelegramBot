@@ -1,4 +1,5 @@
 import telebot
+from telebot import apihelper
 from pytube import YouTube
 import os
 import requests
@@ -10,6 +11,11 @@ key = file.read()
 file.close()
 
 bot = telebot.TeleBot(key)
+
+# bot.log_out()
+
+apihelper.API_URL = 'http://0.0.0.0:8081/bot{0}/{1}'
+apihelper.FILE_URL = 'http://0.0.0.0:8081'
 
 def markup_typo(message):
     markup = telebot.types.InlineKeyboardMarkup(row_width=2)
